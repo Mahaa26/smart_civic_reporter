@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white py-3">
+                <h4 class="mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>Submit Civic Complaint</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Issue Type</label>
+                        <select class="form-select" name="issue_type" required>
+                            <option value="Pothole">🕳️ Pothole</option>
+                            <option value="Garbage Accumulation">🗑️ Garbage Accumulation</option>
+                            <option value="Broken Streetlight">💡 Broken Streetlight</option>
+                            <option value="Water Leakage">🚰 Water Leakage</option>
+                            <option value="Drainage Problem">🌊 Drainage Problem</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Severity Level</label>
+                            <select class="form-select" name="severity" id="severity">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                            <div class="form-text" id="severityHint">Moderate issue, needs attention soon.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Area Impact</label>
+                            <select class="form-select" name="area_impact" id="areaImpact">
+                                <option value="Low">Low</option>
+                                <option value="High" selected>High</option>
+                                <option value="Very High">Very High</option>
+                            </select>
+                            <div class="form-text" id="areaImpactHint">Main road / school / hospital / bus stand area.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Area Name / Landmark</label>
+                        <input type="text" class="form-control" name="area" placeholder="e.g. Anna Nagar near Bus Stand" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Latitude</label>
+                            <input type="text" class="form-control" name="latitude" id="lat" value="13.0827" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Longitude</label>
+                            <input type="text" class="form-control" name="longitude" id="lon" value="80.2707" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="getLocation()"><i class="fa-solid fa-location-crosshairs me-1"></i> Capture Current GPS Location</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Provide details about the problem..." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Upload Issue Image</label>
+                        <input type="file" class="form-control" name="image" accept="image/*" required>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-dark btn-lg"><i class="fa-solid fa-paper-plane me-2"></i>Submit & Run Duplicate Check</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const severityExamples = {
+    "Pothole": {
+        Low: "Minor pothole, barely noticeable.",
+        Medium: "Small pothole, could damage tires.",
+        High: "Large pothole, real accident risk.",
+        Critical: "Major road damage, road may be unsafe to use."
+    },
+    "Garbage Accumulation": {
+        Low: "Small amount of garbage, minor issue.",
+        Medium: "Noticeable pile, needs clearing soon.",
+        High: "Large accumulation, health/hygiene risk.",
+        Critical: "Severe dumping causing blockage or health hazard."
+    },
+    "Broken Streetlight": {
+        Low: "Flickering light, minor issue.",
+        Medium: "Streetlight not working.",
+        High: "Multiple lights out, safety concern at night.",
+        Critical: "Exposed wiring or major electrical hazard."
+    },
+    "Water Leakage": {
+        Low: "Minor drip or seepage.",
+        Medium: "Steady leak, some water wastage.",
+        High: "Large leak, water pooling on the road.",
+        Critical: "Major pipe burst, flooding the area."
+    },
+    "Drainage Problem": {
+        Low: "Slow drainage, minor issue.",
+        Medium: "Water stagnating after rain.",
+        High: "Persistent waterlogging, blocked drain.",
+        Critical: "Severe flooding or sewage overflow."
+    }
+};
+
+const areaImpactExamples = {
+    "Low": "Small residential street, limited footfall.",
+    "High": "Main road / school / hospital / bus stand area.",
+    "Very High": "Major junction, hospital gate, school entrance, or high-traffic transit hub."
+};
+
+function updateSeverityHint() {
+    const issueType = document.querySelector('select[name="issue_type"]').value;
+    const severity = document.getElementById('severity').value;
+    const examples = severityExamples[issueType] || {};
+    document.getElementById('severityHint').textContent = examples[severity] || "";
+}
+
+function updateAreaImpactHint() {
+    const areaImpact = document.getElementById('areaImpact').value;
+    document.getElementById('areaImpactHint').textContent = areaImpactExamples[areaImpact] || "";
+}
+
+document.querySelector('select[name="issue_type"]').addEventListener('change', updateSeverityHint);
+document.getElementById('severity').addEventListener('change', updateSeverityHint);
+document.getElementById('areaImpact').addEventListener('change', updateAreaImpactHint);
+document.addEventListener('DOMContentLoaded', function () {
+    updateSeverityHint();
+    updateAreaImpactHint();
+});
+
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            document.getElementById('lat').value = position.coords.latitude;
+            document.getElementById('lon').value = position.coords.longitude;
+            alert("GPS location successfully captured!");
+        }, function(error) {
+            alert("Unable to retrieve GPS location. Default coordinates kept.");
+        });
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+</script>
+{% endblock %}
